@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
  * Field column num at excel head
  *
  * @author jipengfei
- *
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -20,16 +19,16 @@ public @interface ExcelColumnNum {
 
     /**
      * col num
-     * @return col num
+     * @return
      */
     int value();
 
     /**
      *
-     * Default @see com.alibaba.TypeUtil
+     * Default @see com.alibaba.excel.util.TypeUtil
      * if default is not  meet you can set format
      *
-     * @return format
+     * @return
      */
     String format() default "";
 }

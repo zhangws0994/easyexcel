@@ -1,18 +1,25 @@
 package com.alibaba.excel;
 
-import java.io.OutputStream;
-import java.util.List;
-
+import com.alibaba.excel.event.WriteHandler;
 import com.alibaba.excel.metadata.BaseRowModel;
 import com.alibaba.excel.metadata.Sheet;
 import com.alibaba.excel.metadata.Table;
+import com.alibaba.excel.parameter.GenerateParam;
 import com.alibaba.excel.support.ExcelTypeEnum;
 import com.alibaba.excel.write.ExcelBuilder;
 import com.alibaba.excel.write.ExcelBuilderImpl;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+
 /**
- * 生成excel，thread unsafe
- *
+ * Excel Writer This tool is used to write data out to Excel via POI.
+ * This object can perform the following two functions.
+ * <pre>
+ *    1. Create a new empty Excel workbook, write the data to the stream after the data is filled.
+ *    2. Edit existing Excel, write the original Excel file, or write it to other places.}
+ * </pre>
  * @author jipengfei
  */
 public class ExcelWriter {
@@ -20,45 +27,104 @@ public class ExcelWriter {
     private ExcelBuilder excelBuilder;
 
     /**
-     * 生成小Excel低于2000行
-     *
-     * @param outputStream 文件输出流
-     * @param typeEnum     输出文件类型03或07，强烈建议使用07版（可以输出超大excel而不内存溢出）
+     * Create new writer
+     * @param outputStream the java OutputStream you wish to write the data to
+     * @param typeEnum 03 or 07
      */
     public ExcelWriter(OutputStream outputStream, ExcelTypeEnum typeEnum) {
         this(outputStream, typeEnum, true);
     }
 
+    @Deprecated
+    private Class<? extends BaseRowModel> objectClass;
+
     /**
-     * 生成小Excel低于2000行
-     *
-     * @param outputStream 文件输出流
-     * @param typeEnum     输出文件类型03或07，强烈建议使用07版（可以输出超大excel而不内存溢出）
-     * @param needHead 是否需要表头
+     * @param generateParam
      */
-    public ExcelWriter(OutputStream outputStream, ExcelTypeEnum typeEnum, boolean needHead) {
-        excelBuilder = new ExcelBuilderImpl();
-        excelBuilder.init(outputStream, typeEnum, needHead);
+    @Deprecated
+    public ExcelWriter(GenerateParam generateParam) {
+        this(generateParam.getOutputStream(), generateParam.getType(), true);
+        this.objectClass = generateParam.getClazz();
     }
 
     /**
-     * 生成多sheet,每个sheet一张表
      *
-     * @param data  一行数据是一个BaseRowModel子类的模型
-     * @param sheet data写入某个sheet
-     * @return this（当前引用）
+     * Create new writer
+     * @param outputStream the java OutputStream you wish to write the data to
+     * @param typeEnum 03 or 07
+     * @param needHead Do you need to write the header to the file?
+     */
+    public ExcelWriter(OutputStream outputStream, ExcelTypeEnum typeEnum, boolean needHead) {
+        excelBuilder = new ExcelBuilderImpl(null, outputStream, typeEnum, needHead, null);
+    }
+
+    /**
+     *  Create new writer
+     * @param templateInputStream Append data after a POI file ,Can be null（the template POI filesystem that contains the Workbook stream)
+     * @param outputStream the java OutputStream you wish to write the data to
+     * @param typeEnum 03 or 07
+     */
+    public ExcelWriter(InputStream templateInputStream, OutputStream outputStream, ExcelTypeEnum typeEnum,Boolean needHead) {
+        excelBuilder = new ExcelBuilderImpl(templateInputStream,outputStream, typeEnum, needHead, null);
+    }
+
+
+    /**
+     *  Create new writer
+     * @param templateInputStream Append data after a POI file ,Can be null（the template POI filesystem that contains the Workbook stream)
+     * @param outputStream the java OutputStream you wish to write the data to
+     * @param typeEnum 03 or 07
+     * @param writeHandler User-defined callback
+     */
+    public ExcelWriter(InputStream templateInputStream, OutputStream outputStream, ExcelTypeEnum typeEnum, Boolean needHead,
+                       WriteHandler writeHandler) {
+        excelBuilder = new ExcelBuilderImpl(templateInputStream,outputStream, typeEnum, needHead,writeHandler);
+    }
+
+    /**
+     * Write data to a sheet
+     * @param data Data to be written
+     * @param sheet Write to this sheet
+     * @return this current writer
      */
     public ExcelWriter write(List<? extends BaseRowModel> data, Sheet sheet) {
         excelBuilder.addContent(data, sheet);
         return this;
     }
 
+
     /**
-     * 生成多sheet,每个sheet一张表
+     * Write data to a sheet
+     * @param data Data to be written
+     * @return this current writer
+     */
+    @Deprecated
+    public ExcelWriter write(List data) {
+        if (objectClass != null) {
+            return this.write(data,new Sheet(1,0,objectClass));
+        }else {
+            return this.write0(data,new Sheet(1,0,objectClass));
+
+        }
+    }
+
+    /**
      *
-     * @param data  List代表一行数据
-     * @param sheet data写入某个sheet
-     * @return this（当前引用）
+     * Write data to a sheet
+     * @param data Data to be written
+     * @param sheet Write to this sheet
+     * @return this
+     */
+    public ExcelWriter write1(List<List<Object>> data, Sheet sheet) {
+        excelBuilder.addContent(data, sheet);
+        return this;
+    }
+
+    /**
+     * Write data to a sheet
+     * @param data  Data to be written
+     * @param sheet Write to this sheet
+     * @return this
      */
     public ExcelWriter write0(List<List<String>> data, Sheet sheet) {
         excelBuilder.addContent(data, sheet);
@@ -66,12 +132,11 @@ public class ExcelWriter {
     }
 
     /**
-     * 可生成多sheet,每个sheet多张表
-     *
-     * @param data  type 一个java模型一行数据
-     * @param sheet data写入某个sheet
-     * @param table data写入某个table
-     * @return this（当前引用）
+     * Write data to a sheet
+     * @param data  Data to be written
+     * @param sheet Write to this sheet
+     * @param table Write to this table
+     * @return this
      */
     public ExcelWriter write(List<? extends BaseRowModel> data, Sheet sheet, Table table) {
         excelBuilder.addContent(data, sheet, table);
@@ -79,18 +144,45 @@ public class ExcelWriter {
     }
 
     /**
-     * 可生成多sheet,每个sheet多张表
-     *
-     * @param data  List 代表一行数据
-     * @param sheet data写入某个sheet
-     * @param table data写入某个table
-     * @return this（当前引用）
+     * Write data to a sheet
+     * @param data  Data to be written
+     * @param sheet Write to this sheet
+     * @param table Write to this table
+     * @return this
      */
     public ExcelWriter write0(List<List<String>> data, Sheet sheet, Table table) {
         excelBuilder.addContent(data, sheet, table);
         return this;
     }
 
+    /**
+     * Merge Cells，Indexes are zero-based.
+     *
+     * @param firstRow Index of first row
+     * @param lastRow Index of last row (inclusive), must be equal to or larger than {@code firstRow}
+     * @param firstCol Index of first column
+     * @param lastCol Index of last column (inclusive), must be equal to or larger than {@code firstCol}
+     */
+    public ExcelWriter merge(int firstRow, int lastRow, int firstCol, int lastCol){
+        excelBuilder.merge(firstRow,lastRow,firstCol,lastCol);
+        return this;
+    }
+
+    /**
+     * Write data to a sheet
+     * @param data  Data to be written
+     * @param sheet Write to this sheet
+     * @param table Write to this table
+     * @return
+     */
+    public ExcelWriter write1(List<List<Object>> data, Sheet sheet, Table table) {
+        excelBuilder.addContent(data, sheet, table);
+        return this;
+    }
+
+    /**
+     * Close IO
+     */
     public void finish() {
         excelBuilder.finish();
     }

@@ -1,36 +1,33 @@
 package com.alibaba.excel.metadata;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Sheet参数
  *
  * @author jipengfei
  */
 public class Sheet {
 
     /**
-     * 表头行数
      */
     private int headLineMun;
 
     /**
-     * sheet序号 从0开始
+     * Starting from 1
      */
     private int sheetNo;
 
     /**
-     * 名称 可不填
      */
     private String sheetName;
 
     /**
-     * 对用的表头模型
      */
     private Class<? extends BaseRowModel> clazz;
 
     /**
-     * 对用的表头层级树,用于clazz不确定时候，动态生成表头
      */
     private List<List<String>> head;
 
@@ -38,6 +35,22 @@ public class Sheet {
      *
      */
     private TableStyle tableStyle;
+
+    /**
+     * column with
+     */
+    private Map<Integer,Integer> columnWidthMap = new HashMap<Integer, Integer>();
+
+    /**
+     *
+     */
+    private Boolean autoWidth = Boolean.FALSE;
+
+    /**
+     *
+     */
+    private int startRow = 0;
+
 
     public Sheet(int sheetNo) {
         this.sheetNo = sheetNo;
@@ -114,6 +127,16 @@ public class Sheet {
         this.tableStyle = tableStyle;
     }
 
+
+
+    public Map<Integer, Integer> getColumnWidthMap() {
+        return columnWidthMap;
+    }
+
+    public void setColumnWidthMap(Map<Integer, Integer> columnWidthMap) {
+        this.columnWidthMap = columnWidthMap;
+    }
+
     @Override
     public String toString() {
         return "Sheet{" +
@@ -123,6 +146,23 @@ public class Sheet {
             ", clazz=" + clazz +
             ", head=" + head +
             ", tableStyle=" + tableStyle +
+            ", columnWidthMap=" + columnWidthMap +
             '}';
+    }
+
+    public Boolean getAutoWidth() {
+        return autoWidth;
+    }
+
+    public void setAutoWidth(Boolean autoWidth) {
+        this.autoWidth = autoWidth;
+    }
+
+    public int getStartRow() {
+        return startRow;
+    }
+
+    public void setStartRow(int startRow) {
+        this.startRow = startRow;
     }
 }

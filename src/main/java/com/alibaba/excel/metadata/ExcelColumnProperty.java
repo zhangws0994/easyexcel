@@ -10,22 +10,18 @@ import java.util.List;
 public class ExcelColumnProperty implements Comparable<ExcelColumnProperty> {
 
     /**
-     * 列对应的Class field字段
      */
     private Field field;
 
     /**
-     * 列顺序 默认很大
      */
     private int index = 99999;
 
     /**
-     * 该列对应的表头
      */
     private List<String> head = new ArrayList<String>();
 
     /**
-     * 日期类型format 如："yyyy-MM-dd HH:mm:ss"
      */
     private String format;
 
